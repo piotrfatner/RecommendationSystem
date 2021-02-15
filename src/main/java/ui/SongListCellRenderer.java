@@ -38,9 +38,16 @@ public class SongListCellRenderer implements ListCellRenderer {
                 label2.setText(songToString(song)+ "                                                                                                                                                              ");
                 label2.setOpaque(true);
                 panel.setBackground(CellHasFocus ? hover : normal);
-                panel.setToolTipText("<html><pre> " + " Danceability: " + song.getDanceability() + "<br> " + " Lyrics: "
-                        + song.getLyrics() + "<br> " + " Tempo: " + song.getTempo() + "<br> " + " Likes: " + song.getLikes()
-                        + "<br> " + " Score: " + song.getScore());
+                if(song.getRecommendScore()!=0.0){
+                        panel.setToolTipText("<html><pre> " + " Danceability: " + song.getDanceability() + "<br> " + " Lyrics: "
+                                + song.getLyrics() + "<br> " + " Tempo: " + song.getTempo() + "<br> " + " Likes: " + song.getLikes()
+                                + "<br> " + " Score: " + song.getScore() +"<br>"+"RecommendScore: "+song.getRecommendScore());
+                } else {
+                        panel.setToolTipText("<html><pre> " + " Danceability: " + song.getDanceability() + "<br> " + " Lyrics: "
+                                + song.getLyrics() + "<br> " + " Tempo: " + song.getTempo() + "<br> " + " Likes: " + song.getLikes()
+                                + "<br> " + " Score: " + song.getScore());
+                }
+
                 return panel;
         }
 

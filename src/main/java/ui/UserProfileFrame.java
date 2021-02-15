@@ -3,9 +3,12 @@ package ui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -22,14 +25,16 @@ public class UserProfileFrame extends JFrame {
         private User loggedUser;
         private JTabbedPane tabbedPane;
         private JPanel Mainpanel, searchPanel, recommendedSongPane, recommendedArtistPane, allSongPane, allArtistPane, likedSongPane, likedArtistPane;
-        private JScrollPane rSongScrollPane, rArtistScrollPane, lSongScrollPane, lArtistScrollPane, aSongScrollPane, aArtistScrollPane;
-        private JList rSongList, rArtistList, lSongList, lArtistList, aSongList, aArtistList;
+        private JScrollPane rSongScrollPane, rArtistScrollPane, lSongScrollPane, lArtistScrollPane, aSongScrollPane, aArtistScrollPane, rSearchSongScrollPanel;
+        private JList rSongList, rArtistList, lSongList, lArtistList, aSongList, aArtistList, rSearchSongList;
         private JButton logOut, rLikeSongButton, rRefreshSongsButton, rLikeArtistButton, rRefreshArtistsButton;
         private JButton lRefreshSongsButton, lRefreshArtistsButton;
-        private JButton aLikeSongButton, aLikeArtistButton;
+        private JButton aLikeSongButton, aLikeArtistButton, searchMusicButton;
         private JComboBox comboBox;
+        private JTextField textField;
+        private JLabel searchFor;
 
-        DefaultListModel rSongListModel, rArtistListModel, lSongListModel, lArtistListModel, aSongListModel, aArtistListModel;
+        DefaultListModel rSongListModel, rArtistListModel, lSongListModel, lArtistListModel, aSongListModel, aArtistListModel, rSearchSongModel;
         private JLabel name;
 
         public UserProfileFrame(User user, MainController mainController) {
@@ -94,15 +99,57 @@ public class UserProfileFrame extends JFrame {
                 }
         }
         private void displaySearchPanel(JPanel panel) {
-                setTitle("AutoCompleteComboBox");
+                /*setTitle("AutoCompleteComboBox");
                 String[] countries = new String[] {"india", "australia", "newzealand", "england", "germany",
                         "france", "ireland", "southafrica", "bangladesh", "holland", "america"};
                 comboBox = new AutoCompleteComboBox(countries);
                 add(comboBox, BorderLayout.NORTH);
                 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 setLocationRelativeTo(null);
-                setVisible(true);
-                panel.add(comboBox);
+                setVisible(true);*/
+                //panel.add(comboBox);
+                rSearchSongModel = new DefaultListModel();
+                rSearchSongList = new JList(rSearchSongModel);
+                rSearchSongList.setCellRenderer(new SongListCellRenderer(rSearchSongList));
+                rSearchSongScrollPanel = new JScrollPane(rSearchSongList);
+                textField = new JTextField(16);
+                textField.setToolTipText("SEARCH");
+                textField.setText("SEARCH FOR...");
+                textField.setHorizontalAlignment(SwingConstants.CENTER);
+                textField.addFocusListener(new FocusListener() {
+                        public void focusGained(FocusEvent e) {
+                                textField.setText("");
+                        }
+
+                        public void focusLost(FocusEvent e) {
+                                // nothing
+                        }
+                });
+                textField.setBounds(100,100,500,200);
+                searchMusicButton = new JButton("Search!");
+                searchMusicButton.addActionListener(new ActionListener() {
+                        @Override public void actionPerformed(ActionEvent e) {
+                                try {
+                                        /*JOptionPane.showMessageDialog(UserProfileFrame.this, "Entries Refreshed!", "Operation Successful",
+                                                JOptionPane.INFORMATION_MESSAGE);*/
+                                        refreshSearchedSongList();
+                                } catch (SQLException | IOException e1) {
+                                        // TODO Auto-generated catch block
+                                        e1.printStackTrace();
+                                }
+                        }
+                });
+
+                panel.add(rSearchSongScrollPanel, BorderLayout.CENTER);
+                panel.add(textField, BorderLayout.NORTH);
+                panel.add(searchMusicButton, BorderLayout.AFTER_LAST_LINE);
+                try {
+                        refreshSearchedSongList();
+                } catch (SQLException | IOException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                }
+
         }
 
         private void displayRecommendedArtists(JPanel panel) {
@@ -307,7 +354,7 @@ public class UserProfileFrame extends JFrame {
                 Color tabColor = Color.decode("#E8F5E9");
                 Color tabBackgroundColor = Color.decode("#E8F5E9");
                 logOut = new JButton("Logout");
-                logOut.setBounds(1150, 25, 100, 30);
+                logOut.setBounds(1250, 25, 100, 30);
                 logOut.addActionListener(new ActionListener() {
                         @Override public void actionPerformed(ActionEvent e) {
                                 mainController.openLogin();
@@ -390,6 +437,14 @@ public class UserProfileFrame extends JFrame {
                 rSongList.setListData(songs.toArray());
         }
 
+        void refreshSearchedSongList() throws FileNotFoundException, SQLException, IOException {
+                List<Song> songs = mainController.getSearchedSongs(textField.getText());
+                if(songs.isEmpty()){
+                        songs.add(new Song("EMPTY", "EMPTY", "EMPTY"));
+                }
+                rSearchSongList.setListData(songs.toArray());
+        }
+
         void refreshRecommendedArtistList() throws SQLException, FileNotFoundException, IOException {
                 List<Artist> artists = mainController.getRecommendedArtistList(loggedUser);
                 rArtistList.setListData(artists.toArray());
@@ -414,6 +469,7 @@ public class UserProfileFrame extends JFrame {
         }
 
         public void refresh() throws FileNotFoundException, SQLException, IOException {
+                refreshSearchedSongList();
                 refreshLikedArtistList();
                 refreshLikedSongList();
                 refreshRecommendedArtistList();

@@ -5,6 +5,7 @@ public class Song {
         private double danceability, lyrics, energy, tempo;
         private int likes, song_id;
         private double score;
+        private double recommendScore;
 
         @Override
         public String toString() {
@@ -57,6 +58,22 @@ public class Song {
                 return (danceability + tempo + energy + lyrics) / 4.0;
         }
 
+        public double getRecommendScore() {
+                return recommendScore;
+        }
+
+        public void setRecommendScore(double recommendScore) {
+                this.recommendScore = recommendScore;
+        }
+
+        public double[] getSongPoint(){
+                double averageHappiness = danceability + energy + tempo / 3.0;
+                double toReturn[] = new double[2];
+                toReturn[0] = averageHappiness;
+                toReturn[1] = lyrics;
+                return toReturn;
+        }
+
         public Song(int song_id, String title, String artistName, String album, String genre, double danceability,
                 double lyrics, double energy, double tempo, int likes) {
                 this.song_id = song_id;
@@ -69,5 +86,11 @@ public class Song {
                 this.energy = energy;
                 this.tempo = tempo;
                 this.likes = likes;
+        }
+
+        public Song(String title, String album, String artistName){
+                this.title = title;
+                this.album = album;
+                this.artistName = artistName;
         }
 }

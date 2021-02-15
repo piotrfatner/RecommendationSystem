@@ -33,29 +33,29 @@ public class LoginFrame extends JFrame {
         }
         private void initSwingComponents() {
                 setTitle("User Login");
-                setBounds(100, 100, 800, 600);
+                setBounds(100, 100, 1440, 900);
                 setLayout(null);
                 setResizable(false);
 
-                JLabel background = new JLabel(new ImageIcon("src/main/images/back.jpg"));
+                JLabel background = new JLabel(new ImageIcon("src/main/images/coverApp.jpg"));
                 setContentPane(background);
 
                 usernamelabel = new JLabel("Username : ");
-                usernamelabel.setBounds(160, 80, 100, 40);
+                usernamelabel.setBounds(460, 480, 100, 40);
 
                 usernamefield = new JTextField();
-                usernamefield.setBounds(280, 80, 260, 40);
+                usernamefield.setBounds(580, 480, 260, 40);
 
                 password_label = new JLabel("Password : ");
-                password_label.setBounds(160, 130, 100, 40);
+                password_label.setBounds(460, 530, 100, 40);
 
                 password_field = new JPasswordField();
-                password_field.setBounds(280, 130, 260, 40);
+                password_field.setBounds(580, 530, 260, 40);
 
                 login_button = new JButton("Login");
-                login_button.setBounds(240, 200, 100, 30);
+                login_button.setBounds(540, 600, 100, 30);
                 sign_up = new JButton("Sign up");
-                sign_up.setBounds(400, 200, 100, 30);
+                sign_up.setBounds(700, 600, 100, 30);
                 login_button.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent arg0) {
                                 try {

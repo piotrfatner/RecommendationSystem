@@ -18,6 +18,7 @@ import dao.ArtistDAO;
 import dao.SongDAO;
 import dao.UserDAO;
 import javafx.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 import ui.LoginFrame;
 import ui.SignupFrame;
 import ui.UserProfileFrame;
@@ -96,33 +97,69 @@ public class MainController {
                 return artistDAO.fetchAllArtistsList();
         }
 
+        public List<Song> getSearchedSongs(String searchedText) throws SQLException {
+                List<Song> allSongs = songDAO.fetchAllSongsList();
+                List<Song> returnResult = new ArrayList<>();
+                for (Song song : allSongs) {
+                        if (StringUtils.containsIgnoreCase(song.getTitle(), searchedText) || StringUtils.containsIgnoreCase(song.getArtistName(), searchedText)
+                                || StringUtils.containsIgnoreCase(song.getAlbum(), searchedText)) {
+                                returnResult.add(song);
+                        }
+                }
+
+                return returnResult;
+        }
+
+        public  List<Pair<Song, Double>> calculateItemItemCollaborativeFiltering(List<Song> userLikedSong, List<Song> allSongs) {
+                int artistNameWeight = 4;
+                int genreWeight = 3;
+                int songPropertiesWeight = 2;
+                List<String> likedArtists = new ArrayList<>();
+                List<String> likedGenre = new ArrayList<>();
+                double averageHapiness =0.0;
+                double averageLyrics=0.0;
+                for (Song likedSong : userLikedSong) {
+                        likedArtists.add(likedSong.getArtistName());
+                        likedGenre.add(likedSong.getGenre());
+                        averageHapiness+=likedSong.getSongPoint()[0];
+                        averageLyrics+=likedSong.getSongPoint()[1];
+                }
+                averageHapiness = averageHapiness/userLikedSong.size();
+                averageLyrics = averageLyrics/userLikedSong.size();
+
+                List<Pair<Song, Double>> deviations = new ArrayList<>();
+                for (Song song : allSongs) {
+                        float doesSongHaveLikedArtist = likedArtists.contains(song.getArtistName()) ? 1 : 0;
+                        float doesSongHaveLikedGenre = likedGenre.contains(song.getGenre()) ? 1 : 0;
+                        double distanceFromTwoPoints = Math.sqrt((Math.pow(song.getSongPoint()[0] - averageHapiness ,2))+(Math.pow(song.getSongPoint()[1]-averageLyrics,2)));
+                        double weightedSum =
+                                ((artistNameWeight * doesSongHaveLikedArtist) + (genreWeight * doesSongHaveLikedGenre) + (songPropertiesWeight * (1/distanceFromTwoPoints))) / (
+                                        artistNameWeight + genreWeight + songPropertiesWeight);
+                        //double score = song.getScore();
+                        //double diff = Math.abs(score - userScore);
+                        song.setRecommendScore(weightedSum);
+                        deviations.add(new Pair<Song, Double>(song, weightedSum));
+                }
+                return deviations;
+
+        }
+
         public List<Song> getRecommendedSongList(User user) throws SQLException, FileNotFoundException, IOException {
                 List<Song> allSongs = songDAO.fetchAllSongsList();
                 List<Song> recommended = new ArrayList<>();
                 if (!userDAO.isSongPreferencesSet(user)) return songDAO.fetchTopSongs();
                 List<Song> likedSongs = getLikedSongList(user);
-                double userScore = 0.0;
-                for (Song song : likedSongs) {
-                        double score = song.getScore();
-                        userScore += score;
-                }
-                userScore /= likedSongs.size();
-                List<Pair<Song, Double>> deviations = new ArrayList<>();
-                for (Song song : allSongs) {
-                        double score = song.getScore();
-                        double diff = Math.abs(score - userScore);
-                        deviations.add(new Pair<Song, Double>(song, diff));
-                }
+                List<Pair<Song, Double>> deviations = calculateItemItemCollaborativeFiltering(likedSongs, allSongs);
                 deviations.sort(new Comparator<Pair<Song, Double>>() {
                         @Override public int compare(Pair<Song, Double> o1, Pair<Song, Double> o2) {
-                                if ((o1.getValue() < o2.getValue())) return -1;
+                                if ((o1.getValue() > o2.getValue())) return -1;
                                 return 1;
                         }
                 });
                 for (Pair<Song, Double> pair : deviations) {
                         recommended.add(pair.getKey());
                 }
-                return recommended.subList(0, 8);
+                return recommended.subList(0, 10);
         }
 
         public List<Artist> getRecommendedArtistList(User user) throws SQLException, FileNotFoundException, IOException {
